@@ -184,3 +184,6 @@ venv.bak/
 
 
 # End of https://www.gitignore.io/api/python,pycharm,database
+
+# Stuff for project presentation
+project_presentation/

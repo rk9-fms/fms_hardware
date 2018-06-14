@@ -6,7 +6,7 @@ if platform.system() == 'Darwin':
     serial_port = '/dev/cu.usbserial'
 else:
     # for raspberry pi
-    serial_port = 'ttyUSB0'
+    serial_port = '/dev/ttyUSB0'
 
 serial_kwargs = dict(
     port=serial_port,

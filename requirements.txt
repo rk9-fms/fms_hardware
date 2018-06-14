@@ -1,2 +1,7 @@
-serial
 mock
+uwsgi
+flask
+pyserial
+RPi.GPIO
+flask_cors
+

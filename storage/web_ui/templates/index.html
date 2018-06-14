@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+          crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+            integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+            crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        <!--rewrite it on pure js https://stackoverflow.com/questions/799981/document-ready-equivalent-without-jquery-->
+        $(document).ready(function() {
+            $('.seginput').on('keyup',function(e){
+                this.value = this.value.trim();
+                var mxlen = this.getAttribute("maxlength");
+                if (mxlen == this.value.length)  {
+                    this.nextElementSibling.focus()
+                }
+            });
+        });
+
+    </script>
+
+    <style>
+        .seginput { border-left-width: 0px; border-right-width: 0px; }
+        .seginput:first-child { border-left-width: 1px; }
+        .seginput:last-child { border-right-width: 1px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light">
+        ASRS
+    </nav>
+
+    <div class="container">
+        <div class="row row justify-content-md-center">
+            <div class="col-6">
+                <h3 class="mt-3">Connect to ASRS web-hardware API</h3>
+
+                <div id="web_hw_api" class="input-group mb-3 mt-3">
+                    <input type="text" class="form-control seginput" id="ip_sec_1" placeholder="xxx" maxlength="3" size="3">
+                    <input type="text" class="form-control seginput" id="ip_sec_2" placeholder="xxx" maxlength="3" size="3">
+                    <input type="text" class="form-control seginput" id="ip_sec_3" placeholder="xxx" maxlength="3" size="3">
+                    <input type="text" class="form-control seginput" id="ip_sec_4" placeholder="xxx" maxlength="3" size="3">
+                    <input type="text" class="form-control seginput" id="ip_port" placeholder="xxxxx" maxlength="5" size="5">
+                    <div class="input-group-append">
+                        <input type="button" id="web_hw_api_ip_connect" class="btn btn-outline-success"
+                               data-section="web_hw_api_ip_connect" value="Connect">
+                        <input type="button" id="web_hw_api_ip_disconnect" class="btn btn-outline-danger"
+                               data-section="web_hw_api_ip_disconnect" value="Disconnect" hidden>
+
+                        <span class="input-group-text badge-danger" id="offline_badge">Offline</span>
+                        <span class="input-group-text badge-success" id="online_badge" hidden>Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row row justify-content-md-center">
+            <div class="col-3">
+                <h3>ASRS</h3>
+                <div id="asrs_status">
+                    Status: IDLE
+                </div>
+                <br>
+                <div id="asrs_location">
+                    Location: HOME
+                </div>
+            </div>
+
+
+            <div class="col-3">
+                <div id="application">
+                    <h3>Commands</h3>
+                    <h5>Move to</h5>
+                    <div class="btn-group-vertical mb-3">
+                        <input type="button" class="btn btn-outline-primary" data-section="move_to_home" value="Home">
+                        <input type="button" class="btn btn-outline-primary" data-section="move_to_idle_position" value="Idle position">
+                        <input type="button" class="btn btn-outline-primary" data-section="move_to_conveyor" value="Conveyor">
+                    </div>
+
+
+                    <h5>Pick from</h5>
+                    <div class="btn-group-vertical">
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <input type="button" class="btn btn-outline-primary" data-section="pick_asrs" value="From asrs">
+
+                        </div>
+                        <input type="text" value="1" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" id="pick_side" size="8">
+                        <input type="text" value="2" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" id="pick_row" size="8">
+                        <input type="text" value="3" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" id="pick_column" size="8">
+
+                    </div>
+
+                    <input type="button" class="btn btn-outline-primary" data-section="pick_conveyor" value="From conveyor">
+                    </div>
+
+
+                    <h5>Place to</h5>
+                    <div class="btn-group-vertical">
+
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <input type="button" class="btn btn-outline-primary" data-section="place_asrs" value="To asrs">
+
+                            </div>
+                            <input type="text" value="2" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" id="place_side" size="8">
+                            <input type="text" value="3" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" id="place_row" size="8">
+                            <input type="text" value="4" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" id="place_column" size="8">
+
+                        </div>
+                        <input type="button" class="btn btn-outline-primary" data-section="place_conveyor" value="To conveyor">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <h3>Current task:</h3>
+                <div id="current_task">
+                    <p>Empty</p>
+                </div>
+                <h3>Queue:</h3>
+                <div id="queue">
+                    <p>Empty</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script src="static/script.js"></script>
+</body>
+</html>

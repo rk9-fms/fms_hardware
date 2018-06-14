@@ -9,6 +9,8 @@ from queue import Queue
 from collections import namedtuple
 from abc import ABC, abstractmethod
 
+import RPi.GPIO as GPIO
+
 from storage.hardware_api import config
 
 # TODO: create state like LOADED_AT_PICK_SIDE LOADED_AT_PLACE_SIDE, methods and asserts of this states
@@ -17,6 +19,11 @@ from storage.hardware_api import config
 # TODO: think about executor timeout exception
 # TODO: improve logging
 
+# configuring GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+# configuring logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -127,11 +134,13 @@ class StorageHWAPIBySerial(StorageHWAPI):
     PRE_CONVEYOR = 'PRE_CONV'
     COMMAND_ENCODING = '1251'
     COMMAND_SEPARATOR = '\n\r'
+    GPIO_STATUS_PORTS = [4, 2, 0]
 
     def __init__(self):
         self.logger = logging.getLogger(f'{type(self).__name__}')
         self.logger.debug('Opening serial connection with ASRS')
         self.ser = serial.Serial(**self.serial_config)
+        [GPIO.setup(port, GPIO.IN) for port in self.GPIO_STATUS_PORTS]
 
     def __repr__(self):
         return f'{type(self).__name__}()'
@@ -187,8 +196,16 @@ class StorageHWAPIBySerial(StorageHWAPI):
         self._prepare_and_send_command(command)
 
     def get_status(self):
-        # TODO: implement it
-        status = StorageHWStatus.IDLE
+        # TODO: debug it
+        gpio_status = ''.join(str(GPIO.input(port)) for port in self.GPIO_STATUS_PORTS)
+
+        gpio_status_map = {
+            '000': StorageHWStatus.IDLE,
+            '001': StorageHWStatus.BUSY,
+            '111': StorageHWStatus.E_STOP
+        }
+        status = gpio_status_map.get(gpio_status, StorageHWStatus.ERROR)
+
         self.logger.debug(f'Current status: {status!r}')
         return status
 
