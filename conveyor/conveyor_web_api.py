@@ -136,7 +136,7 @@ def locks_close():
 
 
 @conveyor_api.route("/locks/pass_one", methods=["GET", "POST"])
-def locks_close():
+def locks_pass_one():
     params = request.json
     error, locks_ids = _validate_lock_id_or_name(params)
     if not error:
@@ -163,4 +163,3 @@ app.register_blueprint(conveyor_api)
 
 if __name__ == "__main__":
     app.run()
-    
