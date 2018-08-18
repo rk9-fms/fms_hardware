@@ -1,0 +1,64 @@
+.container {
+    margin: auto;
+    width: 1300px;
+    padding: 10px;
+}
+
+#conveyor{
+    background-repeat: repeat-x;
+    width:  1300px;
+    height: 750px;
+    display:inline-block;
+    position:relative;
+}
+
+#conveyor .lock_1 {
+    position:absolute;
+    top:   192px;
+    right: 550px;
+}
+
+#conveyor .lock_2{
+    position:absolute;
+    top:  192px;
+    left: 230px;
+}
+
+#conveyor .lock_3{
+    position:absolute;
+    top:  425px;
+    left: 58px;
+}
+
+#conveyor .lock_4{
+    position:absolute;
+    bottom: 35px;
+    right:  600px;
+}
+
+#conveyor .button {
+    vertical-align: middle;
+    display: inline-block;
+    height: 30px;
+    width: 55px;
+    margin-right: 2px;
+    margin-left: 2px;
+}
+
+#conveyor .status {
+    vertical-align: middle;
+    display: inline-block;
+    height: 26px;
+    width: 26px;
+    background-color: red;
+    border: 2px solid black;
+    margin-left: 14px;
+    margin-right: 14px;
+}
+
+#conveyor p {
+    vertical-align: middle;
+    display: inline-block;
+    margin-top: 0;
+    margin-bottom: 0;
+}
