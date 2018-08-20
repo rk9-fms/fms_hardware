@@ -3,12 +3,12 @@ import enum
 import serial
 import logging
 import threading
-from queue import Queue
 from collections import namedtuple
 from abc import ABC, abstractmethod
 
 import RPi.GPIO as GPIO
 
+from utils.utils import CallbackImmutableValue, CallbackQueue
 from storage.hardware_api import config
 
 # TODO: create state like LOADED_AT_PICK_SIDE LOADED_AT_PLACE_SIDE, methods and asserts of this states
@@ -202,16 +202,16 @@ class StorageCommandExecutorThread:
     idle_wait_timeout = 30
 
     def __init__(self, storage_hw_api: StorageHWAPI):
+        self._executor_logger = logging.getLogger(f'{type(self).__name__}(executor_thread)')
         self.st_api = storage_hw_api
 
         self._init_waypoints_stuff()
 
-        self.location = StorageLocation.HOME
-        self.status = StorageStatus.IDLE
-        self.queue = Queue()
-        self.current_task = None
+        self.location = CallbackImmutableValue(StorageLocation.HOME)
+        self.status = CallbackImmutableValue(StorageStatus.IDLE)
+        self.queue = CallbackQueue()
+        self.current_task = CallbackImmutableValue(None)
 
-        self._executor_logger = logging.getLogger(f'{type(self).__name__}(executor_thread)')
         self._executor_logger.debug('Initializing the executor thread')
 
         self._executor_thread = threading.Thread(target=self._executor)
@@ -318,9 +318,9 @@ class StorageCommandExecutorThread:
                     self._executor_logger.debug('It\'s time to STOP')
                     break
 
-                current_location = self.location
+                current_location = self.location.value
                 destination, *destination_args = self.queue.get()
-                self.current_task = [destination, *destination_args]
+                self.current_task.value = [destination, *destination_args]
 
                 self._executor_logger.debug(f'Need to move from {current_location} to {destination}')
 
@@ -333,15 +333,15 @@ class StorageCommandExecutorThread:
 
                 if way_methods_list:
                     self._executor_logger.debug(f'Calling the methods from way_methods_list one by one')
-                    self.status = StorageStatus.BUSY
+                    self.status.value = StorageStatus.BUSY
                     for location, asrs_method, method_args in way_methods_list:
                         self._run_asrs_method_and_wait_till_execution(asrs_method, *method_args)
-                        self.location = location
-                    self.status = StorageStatus.IDLE
+                        self.location.value = location
+                    self.status.value = StorageStatus.IDLE
                 else:
-                    self.location = destination
-                self._executor_logger.debug(f'And we are here: {self.location}')
-                self.current_task = None
+                    self.location.value = destination
+                self._executor_logger.debug(f'And we are here: {self.location.value}')
+                self.current_task.value = None
             except Exception as e:
                 self._executor_logger.exception(e)
 

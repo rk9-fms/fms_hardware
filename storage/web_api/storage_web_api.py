@@ -114,7 +114,7 @@ def place_conveyor():
 
 @storage_api.route('/location', methods=['GET', 'POST'])
 def location():
-    _location = st.location
+    _location = st.location.value
 
     resp_json = {"status": 200, "body": {'location': {'name': _location.name,
                                                       'value': _location.value}}}
@@ -123,7 +123,7 @@ def location():
 
 @storage_api.route('/status', methods=['GET', 'POST'])
 def status():
-    _status = st.status
+    _status = st.status.value
     
     resp_json = {"status": 200, "body": {'status': {'name': _status.name,
                                                     'value': _status.value}}}
@@ -132,9 +132,9 @@ def status():
 
 @storage_api.route('/current_task', methods=['GET', 'POST'])
 def current_task():
-    _current_task = st.current_task
+    _current_task = st.current_task.value
     if _current_task:
-        _current_task, *_task_args = st.current_task
+        _current_task, *_task_args = st.current_task.value
 
         resp_json = {"status": 200, "body": {'current_task': {'name': _current_task.name,
                                                               'value': _current_task.value,

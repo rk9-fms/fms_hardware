@@ -29,7 +29,7 @@ with patch('serial.Serial') as patched_serial:
 st.move_to_idle_position()
 st.move_to_idle_position()
 
-print(st.status)
+print(st.status.value)
 st.return_to_home()
 st.pick_from_asrs(1, 2, 3)
 st.return_to_home()
