@@ -1,17 +1,19 @@
 from flask import Flask, Blueprint, jsonify, request, make_response
 from flask_cors import CORS
+from flask_socketio import SocketIO
 
-from storage.hardware_api.storage_api import Storage, StorageHWAPIBySerial
-from storage.hardware_api.storage_test_api import st_hw_api
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 CORS(app)
 
 # TODO: refactor this in next iteration
 # for debug purposes. in "prod" run by nginx (or uwsgi in my case)
 if __name__ == "__main__":
-    st = Storage(st_hw_api)
+    from storage.hardware_api.storage_test_api import test_st_hw_api, test_st
+    st = test_st
 else:
+    from storage.hardware_api.storage_api import Storage, StorageHWAPIBySerial
     st = Storage(StorageHWAPIBySerial())
 
 storage_api_url_prefix = '/api/v1/storage'
@@ -159,4 +161,5 @@ app.register_blueprint(storage_api)
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    socketio.run(app, host='0.0.0.0')
+    # app.run(host='0.0.0.0')

@@ -34,12 +34,12 @@ modules = {
 }
 
 with patch.dict("sys.modules", modules), patch('serial.Serial') as patched_serial:
-    from storage.hardware_api.storage_api import StorageHWAPIBySerial, StorageHWStatus
+    from storage.hardware_api.storage_api import StorageHWAPIBySerial, StorageHWStatus, Storage
 
     patched_serial.return_value = BytesIO()
-    st_hw_api = StorageHWAPIBySerial()
+    test_st_hw_api = StorageHWAPIBySerial()
 
-    st_hw_api._status_call_count = 0
+    test_st_hw_api._status_call_count = 0
 
     def get_status(self):
         if self._status_call_count == 3:
@@ -52,4 +52,5 @@ with patch.dict("sys.modules", modules), patch('serial.Serial') as patched_seria
         return status
 
     # patching the bound method
-    st_hw_api.get_status = types.MethodType(get_status, st_hw_api)
+    test_st_hw_api.get_status = types.MethodType(get_status, test_st_hw_api)
+    test_st = Storage(test_st_hw_api)

@@ -1,7 +1,5 @@
-import os
 import time
 import enum
-import json
 import serial
 import logging
 import threading
@@ -63,16 +61,6 @@ class StorageStatus(enum.Enum):
     IDLE = 1
     ERROR = 2
     BUSY = 3
-
-
-class ASRS:
-    """ Class for ASRS config storing """
-    ROWS = 5
-    COLUMNS = 5
-    SIDES = 2
-    # TODO: make it as properties for logging
-    location = StorageLocation.HOME
-    status = StorageStatus.IDLE
 
 
 class StorageHWAPI(ABC):
@@ -210,20 +198,26 @@ class StorageHWAPIBySerial(StorageHWAPI):
         return status
 
 
-class StorageCommandExecutorThread(ASRS):
+class StorageCommandExecutorThread:
     idle_wait_timeout = 30
 
     def __init__(self, storage_hw_api: StorageHWAPI):
         self.st_api = storage_hw_api
+
+        self._init_waypoints_stuff()
+
+        self.location = StorageLocation.HOME
+        self.status = StorageStatus.IDLE
+        self.queue = Queue()
+        self.current_task = None
+
         self._executor_logger = logging.getLogger(f'{type(self).__name__}(executor_thread)')
         self._executor_logger.debug('Initializing the executor thread')
-        self._init_waypoints_stuff()
-        self._task_queue = Queue()
+
         self._executor_thread = threading.Thread(target=self._executor)
         self._executor_thread.daemon = True
         self._executor_stopped = False
         self._executor_thread.start()
-        self._current_task = None
 
     def _init_waypoints_stuff(self):
         raw_waypoint_nt = namedtuple('RawWaypoint', 'location, asrs_method_positive, asrs_method_negative')
@@ -357,13 +351,12 @@ class StorageCommandExecutorThread(ASRS):
         self._executor_stopped = True
         self._executor_thread.join()
 
-    @property
-    def queue(self):
-        return self._task_queue
 
-    @property
-    def current_task(self):
-        return self._current_task
+class ASRS:
+    """ Class for ASRS config storing """
+    ROWS = 5
+    COLUMNS = 5
+    SIDES = 2
 
 
 class Storage(StorageCommandExecutorThread, ASRS):
@@ -375,8 +368,6 @@ class Storage(StorageCommandExecutorThread, ASRS):
         self.st_api = storage_hw_api
         super().__init__(self.st_api)
         self.logger = logging.getLogger(f'{type(self).__name__}')
-        self.location = StorageLocation.HOME
-        self.status = StorageStatus.IDLE
         if not self.DEBUG:
             self._load_state_and_location()
 
@@ -389,23 +380,12 @@ class Storage(StorageCommandExecutorThread, ASRS):
             self._save_state_and_location()
 
     def _load_state_and_location(self):
-        self.logger.debug('Loading saved state')
-        if os.path.exists(self.backup_file):
-            self.logger.debug('State backup file found')
-            with open(self.backup_file, 'w', encoding='utf8') as backup_file:
-                backup = json.load(backup_file)
-            self.location = StorageLocation(backup['location'])
-            self.status = StorageStatus(backup['status'])
-        else:
-            self.logger.debug('There are no state backup file')
+        # loading current state
+        pass
 
     def _save_state_and_location(self):
-        self.logger.debug('Saving current state')
-        backup = {'location': self.location.value,
-                  'status': self.status.status}
-
-        with open(self.backup_file, encoding='utf8') as backup_file:
-            json.dump(backup, backup_file, indent='\t')
+        # saving current state
+        pass
 
     def _validate_side_row_column(self, side, row, column):
         if not 1 <= side <= self.SIDES:
@@ -438,24 +418,12 @@ class Storage(StorageCommandExecutorThread, ASRS):
         self.move_to_location(StorageLocation.CONVEYOR)
 
     def pick_from_conveyor(self):
-        # TODO: change this logic. need to check current location during the execution, not during this method call
-        # if self.location is StorageLocation.CONVEYOR:
         self.logger.debug('Picking up the item from conveyor')
         self.move_to_idle_position()
 
     def place_to_conveyor(self):
         self.logger.debug('Placing down the item on conveyor')
         self.move_to_conveyor_pick_place_position()
-
-
-def demo(storage: Storage):
-    storage.move_to_idle_position()
-    storage.pick_from_asrs(1, 2, 2)
-    storage.place_to_conveyor()
-    storage.pick_from_conveyor()
-    storage.place_to_asrs(2, 4, 4)
-    storage.return_to_home()
-    storage.stop()
 
 
 if __name__ == '__main__':
