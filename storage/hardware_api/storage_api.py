@@ -276,8 +276,8 @@ class StorageCommandExecutorThread:
         """ Move from current position to the destination """
         self._executor_logger.debug(f'Put the destination in the queue: {location} '
                                     f'with args: {args}')
-        self._task_queue.put((location, *args))
-        self._executor_logger.debug(f'Queue: {self._task_queue.queue}')
+        self.queue.put((location, *args))
+        self._executor_logger.debug(f'Queue: {self.queue.queue}')
 
     def _run_asrs_method_and_wait_till_execution(self, asrs_method, *args):
         self._executor_logger.debug(f'Got some asrs_method to execute: {asrs_method.__code__.co_name} '
@@ -314,13 +314,13 @@ class StorageCommandExecutorThread:
         while True:
             # i can't find another way to stabilize executor thread
             try:
-                if self._executor_stopped and self._task_queue.empty():
+                if self._executor_stopped and self.queue.empty():
                     self._executor_logger.debug('It\'s time to STOP')
                     break
 
                 current_location = self.location
-                destination, *destination_args = self._task_queue.get()
-                self._current_task = [destination, *destination_args]
+                destination, *destination_args = self.queue.get()
+                self.current_task = [destination, *destination_args]
 
                 self._executor_logger.debug(f'Need to move from {current_location} to {destination}')
 
@@ -341,7 +341,7 @@ class StorageCommandExecutorThread:
                 else:
                     self.location = destination
                 self._executor_logger.debug(f'And we are here: {self.location}')
-                self._current_task = None
+                self.current_task = None
             except Exception as e:
                 self._executor_logger.exception(e)
 

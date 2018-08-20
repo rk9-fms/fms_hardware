@@ -34,7 +34,7 @@ modules = {
 }
 
 with patch.dict("sys.modules", modules), patch('serial.Serial') as patched_serial:
-    from storage.hardware_api.storage_api import StorageHWAPIBySerial, StorageHWStatus, Storage
+    from storage.hardware_api.storage_api import *
 
     patched_serial.return_value = BytesIO()
     test_st_hw_api = StorageHWAPIBySerial()
