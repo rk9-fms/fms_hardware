@@ -91,7 +91,7 @@ class Robot:
         time.sleep(2)
         seq = table.get_operation(seq_name)
         seq = seq.decode('utf-8').replace('\n', "\r\n")
-        self.ser.write(seq)
+        self.ser.write(seq.encode())
 
     # Wait till robot start to move
     def wait_to_start(self, home_position):
