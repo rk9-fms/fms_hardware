@@ -4,7 +4,7 @@ import os, sys, setup
 import threading
 from queue import *
 from robot_func import Robot
-from robot_func import DBMaster
+from robot_DB import *
 
 
 class WriteStream(object):
@@ -18,7 +18,7 @@ class WriteStream(object):
         pass
 
 def main():
-    r1_table = DBMaster()
+    r1_table = DBMaster("petyx.db")
     r1_table.add_list('stuff.txt')
 
     robot_1 = Robot(r1_table)

@@ -1,60 +1,16 @@
 import serial
-import time
 from threading import Thread
 import setup
 from queue import Queue
 import enum
-from peewee import *
 import time
-import os.path as path
 
-
-db  = SqliteDatabase('petyx.db')
 
 class RobotState(enum.Enum):
     BUSY = 1
     FREE = 2
     STOP = 3
     ERROR = 4
-
-
-class OpList(Model):
-    seq_name = CharField()
-    sequence = BlobField()
-
-    class Meta:
-        database = db
-
-
-class DBMaster:
-    def __init__(self):
-        db.connect()
-        db.create_tables([OpList])
-
-    # start to fill table with operation lists
-    def add_list(self, filename):
-        fname = path.basename(filename[:-4])
-        try:
-            OpList.select().where(OpList.seq_name == fname).get()
-            return
-        except Exception:
-            pass
-
-        with open(filename, 'r') as some_list:
-            seq = some_list.read()
-        obj = OpList.create(seq_name=fname, sequence=seq)
-        obj.save()
-
-    # return list of operations to complete
-    def get_operation(self, seq_name):
-        try:
-            query = OpList.select().where(OpList.seq_name == seq_name)
-            for i in query:
-                return i.sequence
-                #return bytes(i.sequence, encoding='utf-8')
-        except Exception:
-            print("No such operation")
-            pass
 
 
 class Robot:
@@ -72,6 +28,41 @@ class Robot:
         self.Executor_thread.daemon = True
         self.Executor_thread.start()
 
+    # convert byte string of returned value to proper form
+    #EXample "coord = b'QoKX;72.46;Y;-0.02;Z;552.14;A;2.02;B;139.54;;268435462,0;50;0.00;00000000\r'"
+    #TO {'X': 72, 'Y': 0, 'Z': 552, 'A': 2, 'B': 139}
+    @staticmethod
+    def convert(coord):
+        line = coord.decode('utf-8')
+        i = 0
+        coords = ['X', 'Y', 'Z', 'A', 'B']
+        dick = []
+        my_dick = {}
+        for letter in line:
+            i += 1
+            if letter == 'X':
+                temp = line[i - 1:].split(';')
+                count = 0
+                for x in temp:
+                    if count % 2 == 1:
+                        dick.append(x)
+                    count += 1
+                my_dick = dict(zip(coords, dick))
+
+        for i in my_dick:
+            my_dick[i] = int(float(my_dick[i]))
+        return my_dick
+
+
+    # method to compare positions. Used to comprehension of robot active status
+    @staticmethod
+    def compare_position(pos1, pos2):
+        result = 'equal'
+        for pos1_coords, pos2_coords in zip(pos1.values(), pos2.values()):
+            if pos1_coords != pos2_coords:
+                result = 'different'
+        return result
+
     # get actual position
     def get_position(self):
         while True:
@@ -81,7 +72,7 @@ class Robot:
                 while i != '\r':
                     i = self.ser.read(1).decode('utf-8')
                     position = position + i
-                return position
+                return self.convert(position)
             except Exception:
                 pass
 
@@ -95,17 +86,18 @@ class Robot:
 
     #sends text of program to robot
     def send_things(self, table, seq_name):
+        self.ser.write(b'1;1;CNTLON\r')
+        self.ser.write(b'1;1;SRVON\r')
+        time.sleep(2)
         seq = table.get_operation(seq_name)
-        for i in seq:
-            command = i.split('\n')
-            if command[0].isdigit():
-                command.pop(0)
-            print(i)
-            self.ser.write(bytes(' '.join(command)))
+        seq = seq.decode('utf-8').replace('\n', "\r\n")
+        self.ser.write(seq)
 
+    # Wait till robot start to move
     def wait_to_start(self, home_position):
         start_wait = time.time()
-        if time.time() - start_wait > self.wait_timeout and self.get_position() == home_position:
+        if time.time() - start_wait > self.wait_timeout\
+                and self.compare_position(self.get_position(), home_position) == 'equal':
             raise RuntimeError(f"Some problems.")
         else:
             pass
@@ -115,13 +107,14 @@ class Robot:
         time.sleep(0.5)
         start_wait = time.time()
         while time.time() - start_wait < self.wait_timeout:
-            if self.get_position() == home_position:
+            if self.compare_position(self.get_position(), home_position) == 'equal':
                 self.status = RobotState.FREE
                 return
-            elif self.get_position() != home_position:
+            elif self.compare_position(self.get_position(), home_position) == 'different':
                 self.status = RobotState.BUSY
                 time.sleep(0.5)
             else:
+                self.status = RobotState.ERROR
                 raise RuntimeError(f"Some problems.")
         raise TimeoutError("timeout has been reached")
 
@@ -145,7 +138,6 @@ class Robot:
             except Exception:
                 print('error37')
                 break
-
 
 
     """ seq = table.get_operation('jula(SW)')
