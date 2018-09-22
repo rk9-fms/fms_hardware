@@ -50,142 +50,106 @@ modules = {
 with patch.dict("sys.modules", modules):
     import RPi.GPIO as GPIO
 
-    from conveyor.conveyor_hardware_api import Lock, Conveyor
-
-    class TestLock(TestCase):
-
-        def setUp(self):
-            self.lock = Lock('ZYL.1', 4, 18)
-
-        def test_lock_name(self):
-            self.assertEqual(self.lock.name, "ZYL.1".lower(), "Lock name is incorrect")
-
-        def test_lock_in_port(self):
-            self.assertEqual(self.lock.in_port, 4, "Lock in_port is incorrect")
-
-        def test_lock_out_port(self):
-            self.assertEqual(self.lock.out_port, 18, "Lock out_port is incorrect")
-
-        def test_lock_state(self):
-            self.assertEqual(self.lock.state, "CLOSED", "Lock state is incorrect")
-
-        def test_lock_is_busy(self):
-            self.assertEqual(self.lock.is_busy, False, "Lock is_busy value is incorrect")
-
-        def test_open_lock(self):
-            self.lock.open()
-            self.assertEqual(self.lock.state, "OPEN", "Lock state is incorrect")
-
-        def test_close_lock(self):
-            self.lock.open()
-            self.assertEqual(self.lock.state, "OPEN", "Lock state is incorrect")
-            self.lock.close()
-            self.assertEqual(self.lock.state, "CLOSED", "Lock state is incorrect")
-
-        def test_pass_one_lock(self):
-            self.lock.pass_one()
-            self.assertEqual(self.lock.state, "CLOSED", "Lock state is incorrect")
+    from conveyor.conveyor_hardware_api import Lock, Conveyor, ConveyorState, LockState
 
 
-    class TestConveyor(TestCase):
+class TestLock(TestCase):
 
-        def setUp(self):
-            self.cv = Conveyor(
-                [Lock("ZYL.1", 4, 18), Lock("ZYL.2", 17, 23), Lock("ZYL.3", 27, 24), Lock("ZYL.4", 22, 25)]
-            )
+    def setUp(self):
+        self.lock = Lock('ZYL.1', 4, 18)
 
-        def test_conveyor_state(self):
-            self.assertEqual(self.cv.conveyor_state, "ENABLED", "Conveyor state is incorrect")
+    def test_lock_name(self):
+        self.assertEqual(self.lock.name, "ZYL.1".lower(), "Lock name is incorrect")
 
-        def test_conveyor_e_stop(self):
-            self.cv.conveyor_e_stop()
-            self.assertEqual(self.cv.conveyor_state, "E_STOP", "Conveyor state is incorrect")
+    def test_lock_in_port(self):
+        self.assertEqual(self.lock.in_port, 4, "Lock in_port is incorrect")
 
-        def test_conveyor_lock_state(self):
-            expected_lock_state = {
-                "lock_id": 1,
-                "lock_name": "zyl.1",
-                "is_busy": False,
-                "state": "CLOSED",
-            }
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Lock state is incorrect")
-            self.assertEqual(self.cv.lock_state(lock_name="zyl.1"), expected_lock_state, "Lock state is incorrect")
+    def test_lock_out_port(self):
+        self.assertEqual(self.lock.out_port, 18, "Lock out_port is incorrect")
 
-        def test_conveyor_lock_release_car(self):
-            self.cv.lock_release_car(lock_id=1)
-            expected_lock_state = {
-                "lock_id": 1,
-                "lock_name": "zyl.1",
-                "is_busy": False,
-                "state": "CLOSED",
-            }
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Conveyor lock state is incorrect")
-            self.cv.lock_release_car(lock_name="zyl.1")
-            self.assertEqual(self.cv.lock_state(lock_name="zyl.1"), expected_lock_state,
-                             "Conveyor lock state is incorrect")
+    def test_lock_state(self):
+        self.assertEqual(self.lock.state, LockState.CLOSED, "Lock state is incorrect")
 
-        def test_conveyor_lock_open(self):
-            self.cv.lock_open(lock_id=1)
-            expected_lock_state = {
-                "lock_id": 1,
-                "lock_name": "zyl.1",
-                "is_busy": False,
-                "state": "OPEN",
-            }
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Conveyor lock state is incorrect")
-            self.cv.lock_close(lock_id=1)
-            expected_lock_state["state"] = "CLOSED"
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Conveyor lock state is incorrect")
-            self.cv.lock_open(lock_name="zyl.1")
-            expected_lock_state["state"] = "OPEN"
-            self.assertEqual(self.cv.lock_state(lock_name="zyl.1"), expected_lock_state,
-                             "Conveyor lock state is incorrect")
+    def test_lock_is_busy(self):
+        self.assertEqual(self.lock.is_busy, False, "Lock is_busy value is incorrect")
 
-        def test_conveyor_lock_close(self):
-            expected_lock_state = {
-                "lock_id": 1,
-                "lock_name": "zyl.1",
-                "is_busy": False,
-                "state": "OPEN",
-            }
-            self.cv.lock_open(lock_id=1)
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Conveyor lock state is incorrect")
-            self.cv.lock_close(lock_id=1)
-            expected_lock_state["state"] = "CLOSED"
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Conveyor lock state is incorrect")
-            self.cv.lock_open(lock_id=1)
-            expected_lock_state["state"] = "OPEN"
-            self.assertEqual(self.cv.lock_state(lock_id=1), expected_lock_state, "Conveyor lock state is incorrect")
-            self.cv.lock_close(lock_name="zyl.1")
-            expected_lock_state["state"] = "CLOSED"
-            self.assertEqual(self.cv.lock_state(lock_name="zyl.1"), expected_lock_state,
-                             "Conveyor lock state is incorrect")
+    def test_open_lock(self):
+        self.lock.open()
+        self.assertEqual(self.lock.state, LockState.OPEN, "Lock state is incorrect")
 
-        def test_conveyor_locks_state(self):
-            expected_locks_state = [
-                {
-                    "lock_id": 1,
-                    "lock_name": "zyl.1",
-                    "is_busy": False,
-                    "state": "CLOSED",
-                },
-                {
-                    "lock_id": 2,
-                    "lock_name": "zyl.2",
-                    "is_busy": False,
-                    "state": "CLOSED",
-                },
-                {
-                    "lock_id": 3,
-                    "lock_name": "zyl.3",
-                    "is_busy": False,
-                    "state": "CLOSED",
-                },
-                {
-                    "lock_id": 4,
-                    "lock_name": "zyl.4",
-                    "is_busy": False,
-                    "state": "CLOSED",
-                },
-            ]
-            self.assertEqual(self.cv.locks_state(), expected_locks_state, "Locks states are incorrect")
+    def test_close_lock(self):
+        self.lock.open()
+        self.assertEqual(self.lock.state, LockState.OPEN, "Lock state is incorrect")
+        self.lock.close()
+        self.assertEqual(self.lock.state, LockState.CLOSED, "Lock state is incorrect")
+
+    def test_release_car_lock(self):
+        self.lock.pass_one()
+        sleep(0.1)
+        self.assertEqual(self.lock.state, LockState.OPEN, "Lock state is incorrect")
+        sleep(0.8)
+        self.assertEqual(self.lock.state, LockState.CLOSED, "Lock state is incorrect")
+
+
+class TestConveyor(TestCase):
+
+    def setUp(self):
+        self.cv = Conveyor(
+            [Lock("ZYL.1", 4, 18), Lock("ZYL.2", 17, 23), Lock("ZYL.3", 27, 24), Lock("ZYL.4", 22, 25)]
+        )
+
+    def test_conveyor_state(self):
+        self.assertEqual(self.cv.state, ConveyorState.ENABLED, "Conveyor state is incorrect")
+
+    def test_conveyor_e_stop(self):
+        self.cv.conveyor_e_stop()
+        self.assertEqual(self.cv.state, ConveyorState.E_STOP, "Conveyor state is incorrect")
+
+    def test_conveyor_lock_state(self):
+        lock, state = self.cv.lock_state(1)
+        self.assertEqual(state, LockState.CLOSED, "Lock state is incorrect")
+        lock, state = self.cv.lock_state("zyl.1")
+        self.assertEqual(state, LockState.CLOSED, "Lock state is incorrect")
+
+    def test_conveyor_lock_release_car(self):
+        self.cv.lock_pass_one(1)
+        sleep(0.1)
+        self.assertEqual(self.cv.locks[0].state, LockState.OPEN, "Conveyor lock state is incorrect")
+        sleep(0.8)
+        self.assertEqual(self.cv.locks[0].state, LockState.CLOSED, "Conveyor lock state is incorrect")
+        self.cv.lock_pass_one("zyl.1")
+        sleep(0.1)
+        self.assertEqual(self.cv.locks[0].state, LockState.OPEN, "Conveyor lock state is incorrect")
+        sleep(0.8)
+        self.assertEqual(self.cv.locks[0].state, LockState.CLOSED, "Conveyor lock state is incorrect")
+
+    def test_conveyor_lock_open(self):
+        self.cv.lock_open(1)
+        lock, state = self.cv.lock_state(1)
+        self.assertEqual(state, LockState.OPEN, "Conveyor lock state is incorrect")
+        self.cv.lock_close(1)
+        lock, state = self.cv.lock_state(1)
+        self.assertEqual(state, LockState.CLOSED, "Conveyor lock state is incorrect")
+        self.cv.lock_open("zyl.1")
+        lock, state = self.cv.lock_state("zyl.1")
+        self.assertEqual(state, LockState.OPEN, "Conveyor lock state is incorrect")
+
+    def test_conveyor_lock_close(self):
+        self.cv.lock_open(1)
+        lock, state = self.cv.lock_state(1)
+        self.assertEqual(state, LockState.OPEN, "Conveyor lock state is incorrect")
+        self.cv.lock_close(1)
+        lock, state = self.cv.lock_state(1)
+        self.assertEqual(state, LockState.CLOSED, "Conveyor lock state is incorrect")
+        self.cv.lock_open(1)
+        lock, state = self.cv.lock_state(1)
+        self.assertEqual(state, LockState.OPEN, "Conveyor lock state is incorrect")
+        self.cv.lock_close("zyl.1")
+        lock, state = self.cv.lock_state("zyl.1")
+        self.assertEqual(state, LockState.CLOSED, "Conveyor lock state is incorrect")
+
+    def test_conveyor_locks_state(self):
+        locks_state = [state for lock, state in self.cv.locks_state()]
+        expected_locks_state = [LockState.CLOSED, LockState.CLOSED, LockState.CLOSED, LockState.CLOSED]
+
+        self.assertEqual(locks_state, expected_locks_state, "Locks states are incorrect")
