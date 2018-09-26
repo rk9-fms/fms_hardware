@@ -1,3 +1,4 @@
+import os
 from time import sleep
 from enum import Enum
 from collections import namedtuple
@@ -7,6 +8,7 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
+is_sim = os.environ.get('SIMULATION', False)
 
 class LockState(Enum):
     CLOSED = 0
@@ -104,7 +106,12 @@ class Lock:
             return
         GPIO.output(self.out_port, GPIO.HIGH)
         self.state = LockState.OPEN
-        sleep(self.PASS_ONE_AWAIT_TIME)
+        if not is_sim:
+            sleep(0.2)
+            GPIO.wait_for_edge(self.in_port, GPIO.RISING)
+            GPIO.wait_for_edge(self.in_port, GPIO.FALLING)
+        else:
+            sleep(self.PASS_ONE_AWAIT_TIME)
         GPIO.output(self.out_port, GPIO.LOW)
         self.state = LockState.CLOSED
 

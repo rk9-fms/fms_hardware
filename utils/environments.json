@@ -1,0 +1,8 @@
+{
+  "conveyor": {
+    "web_api_host": null,
+    "web_api_port": null,
+    "dispatcher_web_api_host": null,
+    "dispatcher_web_api_port": null
+  }
+}

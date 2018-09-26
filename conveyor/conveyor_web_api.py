@@ -3,6 +3,7 @@ from flask_cors import CORS
 from multiprocessing.pool import ThreadPool
 
 from conveyor.conveyor_hardware_api import Conveyor, Lock
+from utils import env
 
 
 app = Flask(__name__)
@@ -149,4 +150,4 @@ def conveyor_status():
 app.register_blueprint(conveyor_api)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(env.conveyor_web_api_host, env.conveyor_web_api_port)
