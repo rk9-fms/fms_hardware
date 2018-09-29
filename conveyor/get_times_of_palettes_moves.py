@@ -20,10 +20,10 @@ for _ in range(10):
         start_lock.pass_one()
         movement_start_time = datetime.now()
         end_lock = next(locks_cycle)
-        end_lock_is_busy = end_lock.is_busy()
+        end_lock_is_busy = end_lock.is_busy
         while not end_lock_is_busy:
             sleep(0.1)
-            end_lock_is_busy = end_lock.is_busy()
+            end_lock_is_busy = end_lock.is_busy
         movement_end_time = datetime.now()
         movement_time = movement_end_time - movement_start_time
         times["{}->{}".format(start_lock.id, end_lock.id)].append(str(movement_time))
