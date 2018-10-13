@@ -8,8 +8,24 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+let status_map = {
+    1: document.getElementsByClassName('lock_1')[0].getElementsByClassName('status')[0],
+    2: document.getElementsByClassName('lock_2')[0].getElementsByClassName('status')[0],
+    3: document.getElementsByClassName('lock_3')[0].getElementsByClassName('status')[0],
+    4: document.getElementsByClassName('lock_4')[0].getElementsByClassName('status')[0],
+};
+
 function status_update(json_resp) {
-//    TODO: need to implement this foo for updating status of conveyor
+    json_resp['body']['locks_state'].forEach(function(item, i, arr) {
+        console.log(i);
+        let status_div = status_map[item['id']];
+        console.log(status_div);
+        if (item['is_busy'] === true) {
+            status_div.style.backgroundColor = 'red'
+        } else {
+            status_div.style.backgroundColor = 'green'
+        }
+    })
 }
 
 async function get_status() {
@@ -52,7 +68,7 @@ let buttons_map = {
     'lock_4_pass_one': {'endpoint': 'locks/pass_one', 'params': {'ids': [4]}},
 };
 
-conveyor.addEventListener('click', () => {
+conveyor.addEventListener('click', (event) => {
     if (event.target.type === "button") {
         const sectionId = event.target.getAttribute('data-section');
         let xhr = new XMLHttpRequest();
@@ -67,3 +83,5 @@ conveyor.addEventListener('click', () => {
         console.log(action_url, json);
     }
 });
+
+get_status();
