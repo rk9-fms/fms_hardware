@@ -20,7 +20,7 @@ template = """\
 """
 
 template_height = len(template.split('\n')) + 1
-template_width = max(map(len, template.split('\n'))) + 1
+template_width = max(map(len, template.split('\n'))) + 2
 
 # coordinates for tkinter tags
 locks_is_open_symbols = [
