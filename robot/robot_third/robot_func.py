@@ -1,9 +1,11 @@
-import serial
-from threading import Thread
-import setup
-from queue import Queue
 import enum
 import time
+from queue import Queue
+from threading import Thread
+
+import serial
+
+import robot.robot_third.setup as setup
 
 
 class RobotState(enum.Enum):
@@ -15,8 +17,9 @@ class RobotState(enum.Enum):
 
 class Robot:
     wait_timeout = 30
+
     def __init__(self, table):
-        self.ser = serial.Serial(setup.port, baudrate=9600, bytesize=serial.EIGHTBITS,
+        self.ser = serial.Serial(setup.serial_port, baudrate=9600, bytesize=serial.EIGHTBITS,
                                  parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE, timeout=2)  # open serial port
         self.status = RobotState.FREE
         self.entity_table = table
@@ -25,7 +28,7 @@ class Robot:
 
         self.queue = Queue()
         self.Executor_thread = Thread(target=self.run)
-        self.Executor_thread.daemon = True
+        self.Executor_thread.daemon = False
         self.Executor_thread.start()
 
     # convert byte string of returned value to proper form
@@ -138,11 +141,3 @@ class Robot:
             except Exception:
                 print('error37')
                 break
-
-
-    """ seq = table.get_operation('jula(SW)')
-    for i in seq:
-        command = i.split(' ')
-        if command[0].isdigit():
-            command.pop(0)
-        print(bytes(' '.join(command)))"""

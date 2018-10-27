@@ -1,1 +1,1 @@
-port = 'COM5'
+serial_port = 'COM5'

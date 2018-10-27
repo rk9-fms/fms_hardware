@@ -1,10 +1,5 @@
-import serial
-import time
-import os, sys, setup
-import threading
-from queue import *
-from robot_func import Robot
-from robot_DB import *
+from robot.robot_third.robot_DB import *
+from robot.robot_third.robot_func import Robot
 
 
 class WriteStream(object):
@@ -17,6 +12,7 @@ class WriteStream(object):
     def flush(self):
         pass
 
+
 def main():
     r1_table = DBMaster("petyx.db")
     r1_table.add_list('stuff.txt')
@@ -27,4 +23,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+    import time
+    time.sleep(1000)
 
