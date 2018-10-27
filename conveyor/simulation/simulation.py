@@ -147,10 +147,14 @@ class Conveyor:
         return thread
 
     def lock_pass_one(self, lock_index):
-        # TODO: add logic with checking not is_empty. if empty - do nothing
-        # if already opened - just close
         with self._lock:
-            self.way.locks[lock_index].is_pass_one = True
+            lock: Lock = self.way.locks[lock_index]
+            if lock.is_empty():
+                return
+            if not lock.is_closed:
+                lock.is_closed = True
+            else:
+                lock.is_pass_one = True
 
     def lock_open(self, lock_index):
         with self._lock:
@@ -204,6 +208,14 @@ class Conveyor:
             self._quit = True
         self._conv_thread.join(self.sim_speed_delay)
 
+    def reset(self):
+        with self._lock:
+            self.palettes.clear()
+            for element in self.way:
+                element.palette = None
+                if isinstance(element, Lock):
+                    element.is_closed = True
+                    element.is_pass_one = False
 
 def print_way(way: Way):
     """ Simple visualiser for debug purpose """

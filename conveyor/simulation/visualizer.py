@@ -60,6 +60,11 @@ class TkVisualiser:
         locks_frame, self.locks_statuses_labels = self.create_locks_frame(visualiser_frame)
         locks_frame.pack(side=tk.TOP, fill=tk.X)
 
+        # reset button
+        reset_button = tk.Button(visualiser_frame, text='Reset visualisation')
+        reset_button.pack(side=tk.BOTTOM)
+        reset_button.bind("<Button-1>", lambda event: self.conveyor.reset())
+
         visualiser_frame.pack(side=tk.LEFT)
 
         # listener log frame
@@ -115,7 +120,7 @@ class TkVisualiser:
         sim_speed_var = tk.DoubleVar()
         sim_speed_var.set(self.conveyor.sim_speed_delay)
         sim_speed_spinbox = tk.Spinbox(sim_speed_frame,
-                                       from_=0.1, to=2, increment=0.1,
+                                       from_=0.1, to=2, increment=0.05,
                                        textvariable=sim_speed_var, command=upd_sim_speed)
         sim_speed_spinbox.pack(side=tk.LEFT, expand=1)
 
